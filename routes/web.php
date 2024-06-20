@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Requests\TaskRequest;
-use App\Models\Task;
+// use App\Models\Task;
+use App\Http\Controllers\TasksController;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,53 +22,16 @@ Route::get('/', function () {
     return redirect()->route('tasks.index');
 });
 
-Route::get('/tasks', function () {
-    return view('index', [
-        'tasks' => Task::latest()->paginate(10)
-    ]);
-})->name('tasks.index');
-
-Route::view('/tasks/create', 'create')
-    ->name('tasks.create');
-
-Route::get('/tasks/{task}/edit', function (Task $task) {
-    return view('edit', [
-        'task' => $task
-    ]);
-})->name('tasks.edit');
-
-Route::get('/tasks/{task}', function (Task $task) {
-    return view('show', [
-        'task' => $task
-    ]);
-})->name('tasks.show');
-
-Route::post('/tasks', function (TaskRequest $request) {
-    $task = Task::create($request->validated());
-
-    return redirect()->route('tasks.show', ['task' => $task->id])
-        ->with('success', 'Task created successfully!');
-})->name('tasks.store');
-
-Route::put('/tasks/{task}', function (Task $task, TaskRequest $request) {
-    $task->update($request->validated());
-
-    return redirect()->route('tasks.show', ['task' => $task->id])
-        ->with('success', 'Task updated successfully!');
-})->name('tasks.update');
-
-Route::delete('/tasks/{task}', function (Task $task) {
-    $task->delete();
-
-    return redirect()->route('tasks.index')
-        ->with('success', 'Task deleted successfully!');
-})->name('tasks.destroy');
-
-Route::put('tasks/{task}/toggle-complete', function (Task $task) {
-    $task->toggleComplete();
-
-    return redirect()->back()->with('success', 'Task updated successfully!');
-})->name('tasks.toggle-complete');
+Route::prefix('tasks')->group(function () {
+    Route::get('/', [TasksController::class, 'index'])->name('tasks.index');
+    Route::post('/', [TasksController::class , 'create'])->name('tasks.store');
+    Route::put('/{task}', [TasksController::class , 'update'] )->name('tasks.update');
+    Route::delete('/{task}', [TasksController::class,'destroy'])->name('tasks.destroy');
+    Route::put('/{task}/toggle-complete', [TasksController::class, 'toogleComplete'])->name('tasks.toggle-complete');
+    Route::view('/create', [TasksController::class,'create'])->name('tasks.create');
+    Route::get('/{task}/edit', [TasksController::class , 'edit'])->name('tasks.edit');
+    Route::get('/{task}', [TasksController::class , 'show'])->name('tasks.show');
+});
 
 Route::fallback(function () {
     return 'Page Not Found!';
